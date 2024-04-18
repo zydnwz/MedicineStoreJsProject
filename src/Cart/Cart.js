@@ -63,12 +63,12 @@ const Cart = (props) => {
       </div>
       <div className={classes.actions}>
         <button
-          className={classes["buttton--alt"]}
+          className={classes["button--alt"]}
           onClick={props.hideCartHandler}
         >
           close
         </button>
-        <button className={classes.buttom}>Order</button>
+        <button className={classes.button}>Order</button>
       </div>
     </Modal>
   );

@@ -1,37 +1,66 @@
-import { useState } from "react";
+import React, { useState, useEffect } from "react";
 import CartContext from "./cart-context";
-
 import "./CartProvider.css";
+import { addProduct, addToCart, fetchProducts, fetchCart } from "../Api";
 
 const CartProvider = (props) => {
   const [items, setItems] = useState([]);
   const [cartItems, setCartItems] = useState([]);
 
-  //Adding item to List
-  const addItemToListHandler = (item) => {
-    const updatedItem = [...items];
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const localItems = localStorage.getItem("items");
+        if (localItems) {
+          setItems(JSON.parse(localItems));
+        } else {
+          const products = await fetchProducts();
+          setItems(products);
+          localStorage.setItem("items", JSON.stringify(products));
+        }
 
-    const existingItem = updatedItem.find(
-      (medicineItem) => medicineItem.medicineName === item.medicineName
-    );
-
-    if (existingItem) {
-      if (existingItem.quantity === "Out of Stock") {
-        existingItem.quantity = Number(item.quantity);
-      } else {
-        existingItem.quantity =
-          Number(existingItem.quantity) + Number(item.quantity);
+        const localCart = localStorage.getItem("cartItems");
+        if (localCart) {
+          setCartItems(JSON.parse(localCart));
+        } else {
+          const cart = await fetchCart();
+          setCartItems(cart);
+          localStorage.setItem("cartItems", JSON.stringify(cart));
+        }
+      } catch (error) {
+        console.error("Error fetching data:", error);
       }
-    } else {
-      updatedItem.push(item);
+    };
+    fetchData();
+  }, []);
+
+  const addItemToListHandler = async (item) => {
+    try {
+      await addProduct(item);
+      const updatedItem = [...items];
+      const existingItem = updatedItem.find(
+        (medicineItem) => medicineItem.medicineName === item.medicineName
+      );
+
+      if (existingItem) {
+        if (existingItem.quantity === "Out of Stock") {
+          existingItem.quantity = Number(item.quantity);
+        } else {
+          existingItem.quantity =
+            Number(existingItem.quantity) + Number(item.quantity);
+        }
+      } else {
+        updatedItem.push(item);
+      }
+      setItems(updatedItem);
+      localStorage.setItem("items", JSON.stringify(updatedItem));
+    } catch (error) {
+      console.error("Error adding product:", error);
     }
-    setItems(updatedItem);
   };
 
-  //Removing item from List
   const removeItemFromListHandler = (name) => {
     let updatedItem = [...items];
-
     const existingItem = updatedItem.find(
       (medicineItem) => medicineItem.medicineName === name
     );
@@ -42,39 +71,36 @@ const CartProvider = (props) => {
       existingItem.quantity = "Out of Stock";
     }
     setItems(updatedItem);
+    localStorage.setItem("items", JSON.stringify(updatedItem));
   };
 
-  //Adding Item to Cart
-  const addItemToCartHandler = (item) => {
-    const updatedCartItem = [...cartItems];
-    const updatedItem = [...items];
+  const addItemToCartHandler = async (item) => {
+    try {
+      await addToCart(item);
+      const existingCartItemIndex = cartItems.findIndex(
+        (cartItem) => cartItem.medicineName === item.medicineName
+      );
 
-    // list medicine items
-    const existingItem = updatedItem.find(
-      (medicineItem) => medicineItem.medicineName === item.medicineName
-    );
-
-    // cart medicine items
-    const existingCartItem = updatedCartItem.find(
-      (medicineItem) => medicineItem.medicineName === item.medicineName
-    );
-
-    if (existingCartItem) {
-      if (existingItem.quantity !== "Out of Stock") {
-        existingCartItem.quantity = Number(existingCartItem.quantity) + 1;
+      if (existingCartItemIndex !== -1) {
+        const updatedCartItems = [...cartItems];
+        updatedCartItems[existingCartItemIndex].quantity =
+          Number(updatedCartItems[existingCartItemIndex].quantity) + 1;
+        setCartItems(updatedCartItems);
+        localStorage.setItem("cartItems", JSON.stringify(updatedCartItems));
+      } else {
+        const newItem = await addToCart(item);
+        const updatedCartItems = [...cartItems, newItem];
+        setCartItems(updatedCartItems);
+        localStorage.setItem("cartItems", JSON.stringify(updatedCartItems));
       }
-    } else {
-      updatedCartItem.push(item);
+      removeItemFromListHandler(item.medicineName);
+    } catch (error) {
+      console.error("Error adding to cart:", error);
     }
-    setCartItems(updatedCartItem);
-
-    removeItemFromListHandler(item.medicineName);
   };
 
-  //Removing Item from Cart
   const removeItemFromCartHandler = (item) => {
     let updatedCartItem = [...cartItems];
-
     const existingCartItem = updatedCartItem.find(
       (medicineItem) => medicineItem.medicineName === item.medicineName
     );
@@ -82,9 +108,12 @@ const CartProvider = (props) => {
     if (Number(existingCartItem.quantity) > 1) {
       existingCartItem.quantity = Number(existingCartItem.quantity) - 1;
     } else {
-      updatedCartItem.pop(existingCartItem);
+      updatedCartItem = updatedCartItem.filter(
+        (medicineItem) => medicineItem.medicineName !== item.medicineName
+      );
     }
     setCartItems(updatedCartItem);
+    localStorage.setItem("cartItems", JSON.stringify(updatedCartItem));
   };
 
   const cartContext = {

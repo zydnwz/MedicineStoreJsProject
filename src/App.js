@@ -6,6 +6,7 @@ import MedicineForm from "./MedicineForm/MedicineForm.js";
 import ItemList from "./ItemList/ItemList.js";
 import CartProvider from "./Store/CartProvider";
 
+import "./App.css";
 
 function App() {
   const [cartIsShown, setCartIsShown] = useState(false);

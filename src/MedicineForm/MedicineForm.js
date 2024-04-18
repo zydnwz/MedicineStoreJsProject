@@ -1,10 +1,10 @@
-// MedicineForm.js
-import React, { useState, useContext } from "react";
-import axios from "axios";
+import React, { useContext, useState } from "react";
+
 import CartContext from "../Store/cart-context";
+
 import "./MedicineForm.css";
 
-const MedicineForm = () => {
+const MedicineForm = (props) => {
   const [medicineName, setMedicineName] = useState("");
   const [description, setDescription] = useState("");
   const [price, setPrice] = useState("");
@@ -28,24 +28,17 @@ const MedicineForm = () => {
     setQuantity(event.target.value);
   };
 
-  const addItemInContext = async (event) => {
+  const addItemInContext = (event) => {
     event.preventDefault();
 
-    const item = {
+    let item = {
       medicineName: medicineName,
       description: description,
       price: price,
       quantity: quantity,
     };
 
-    try {
-      await axios.post("https://crudcrud.com/api/3c8ae84e41734a5899c0303d0dcbc153/products", item);
-      cartCtx.addItem(item);
-      console.log("Product added successfully");
-      localStorage.setItem("cartItems", JSON.stringify(cartCtx.cartItems));
-    } catch (error) {
-      console.error("Error adding product:", error);
-    }
+    cartCtx.addItem(item);
 
     setMedicineName("");
     setDescription("");
@@ -62,7 +55,6 @@ const MedicineForm = () => {
         <input
           className="form-input"
           onChange={medicineNameHandler}
-          value={medicineName}
           id="medicineName"
           type="text"
         ></input>
@@ -73,7 +65,6 @@ const MedicineForm = () => {
         <input
           className="form-input"
           onChange={descriptionHandler}
-          value={description}
           id="description"
           type="text"
         ></input>
@@ -84,7 +75,6 @@ const MedicineForm = () => {
         <input
           className="form-input"
           onChange={priceHandler}
-          value={price}
           id="price"
           type="text"
         ></input>
@@ -95,7 +85,6 @@ const MedicineForm = () => {
         <input
           className="form-input"
           onChange={quantityHandler}
-          value={quantity}
           id="quantity"
           type="number"
         ></input>

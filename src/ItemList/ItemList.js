@@ -1,5 +1,4 @@
-import React, { useContext } from "react";
-import axios from "axios";
+import { useContext } from "react";
 import CartContext from "../Store/cart-context";
 
 import "./ItemList.css";
@@ -7,7 +6,7 @@ import "./ItemList.css";
 const ItemList = (props) => {
   const cartCtx = useContext(CartContext);
 
-  const addToCart = async (item) => {
+  const addToCart = (item) => {
     if (item.quantity > 0) {
       let medicineItem = {
         medicineName: item.medicineName,
@@ -15,19 +14,10 @@ const ItemList = (props) => {
         price: item.price,
         quantity: "1",
       };
-
       cartCtx.addCartItem(medicineItem);
-
-      try {
-        await axios.post("https://crudcrud.com/api/3c8ae84e41734a5899c0303d0dcbc153/cart", medicineItem);
-        console.log("Item added to cart successfully");
-
-        localStorage.setItem("cartItems", JSON.stringify(cartCtx.cartItems));
-      } catch (error) {
-        console.error("Error adding item to cart:", error);
-      }
     }
   };
+
   return (
     <div className="item-list">
       <ul>
